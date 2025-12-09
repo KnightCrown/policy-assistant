@@ -15,7 +15,6 @@ import {
   Trash2,
   Search,
   RefreshCw,
-  BrainCircuit,
   Menu,
   X,
   ExternalLink,
@@ -389,7 +388,7 @@ export default function Home() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">Policy Assistant</p>
-              <p className="text-xs text-gray-400">v1.2.0</p>
+              <p className="text-xs text-gray-400">v1.2.1</p>
             </div>
           </div>
         </div>
@@ -425,16 +424,20 @@ export default function Home() {
           <div className="max-w-3xl mx-auto space-y-8 pb-32">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
-                <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center text-blue-600 mb-4">
-                  <BrainCircuit size={40} />
+                <div className="w-24 h-24 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-4 relative overflow-hidden">
+                  <Image
+                    src="/ppmLogo2.png"
+                    alt="Policy Assistant Logo"
+                    fill
+                    className="object-contain p-4"
+                  />
                 </div>
                 <h2 className="text-3xl font-bold text-gray-800">
                   How can I help with your policy analysis?
                 </h2>
-                <p className="text-gray-500 max-w-md">
-                  Ask about interventions, program designs, or evidence-based
-                  strategies. I'll analyze the evidence strength and
-                  implementation complexity for you.
+                <p className="text-gray-500 max-w-lg">
+                  Example: What are low-cost ways to improve digital ID uptake
+                  among rural women in low-income countries?
                 </p>
               </div>
             ) : (

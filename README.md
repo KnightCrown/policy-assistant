@@ -13,9 +13,9 @@ Policy Assistant helps policy analysts, task team leaders, and program managers 
   - **Evidence Strength** (0-100): How well-supported the response is by research and data. Includes a "View Evidence" feature to see source links.
   - **Implementation Complexity** (0-100): How difficult the proposed intervention would be to implement.
 
-## Features (v1.2.0)
+## Features (v1.2.1)
 
-- **AI Policy Assistant**: Powered by OpenAI (GPT-4o-mini) with a specialized system prompt for policy analysis.
+- **AI Policy Assistant**: Powered by OpenAI (GPT-5 nano) with a specialized system prompt for policy analysis.
 - **Smart Metrics**: Automatic computation of "Evidence Strength" and "Implementation Complexity" based on response heuristics.
 - **Source Extraction**: Automatically detects and extracts source URLs from the AI response, accessible via a "View Evidence" button.
 - **Conversation History**: Persists your chat history locally in your browser so you can pick up where you left off.
@@ -60,7 +60,7 @@ Policy Assistant helps policy analysts, task team leaders, and program managers 
    Edit `.env.local`:
    ```env
    OPENAI_API_KEY=your_openai_api_key_here
-   OPENAI_MODEL=gpt-4o-mini
+   OPENAI_MODEL=gpt-5-nano
    NEXT_PUBLIC_APP_NAME=Policy Assistant
    ```
 
@@ -95,8 +95,4 @@ Policy Assistant helps policy analysts, task team leaders, and program managers 
 ├── public/               # Static assets (logos, icons)
 └── ...
 ```
-
-## License
-
-This project is licensed under the MIT License.
 

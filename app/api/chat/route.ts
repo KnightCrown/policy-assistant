@@ -3,7 +3,7 @@ import { ChatRequest, ChatResponse, ErrorResponse } from "@/types/chat";
 import { computeMetrics } from "@/lib/metrics";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5-nano";
 
 const SYSTEM_PROMPT = `You are a helpful policy analysis assistant for development projects. Provide concise, structured answers suitable for World Bank style policy notes. Always respond in clear English, in 2 to 4 short paragraphs, optionally with bullet points.
 

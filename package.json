@@ -1,6 +1,6 @@
 {
   "name": "policy-prompt-mini",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Quick AI briefs for policy questions with evidence strength and implementation complexity metrics",
   "scripts": {
