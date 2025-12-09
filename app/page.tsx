@@ -40,6 +40,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showTechStack, setShowTechStack] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -382,13 +383,16 @@ export default function Home() {
 
         {/* Sidebar Footer (Settings placeholder) */}
         <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer text-gray-600 transition-colors">
-            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-              <HelpCircle size={16} className="text-gray-500" />
+          <div 
+            onClick={() => setShowTechStack(true)}
+            className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer text-gray-600 transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-[#155dfc] flex items-center justify-center">
+              <HelpCircle size={16} className="text-white" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">Policy Assistant</p>
-              <p className="text-xs text-gray-400">v1.2.1</p>
+              <p className="text-xs text-gray-400">v1.2.4</p>
             </div>
           </div>
         </div>
@@ -578,6 +582,63 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* Tech Stack Modal */}
+      {showTechStack && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
+            <button 
+              onClick={() => setShowTechStack(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X size={20} />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                <HelpCircle size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Tech Stack</h3>
+                <p className="text-sm text-gray-500">Policy Assistant v1.2.4</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Frontend</h4>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700">Next.js 14</span>
+                  <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700">React</span>
+                  <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700">TypeScript</span>
+                  <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700">Tailwind CSS</span>
+                  <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700">Lucide Icons</span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">AI Model</h4>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-blue-50 border border-blue-100 rounded-md text-xs font-medium text-blue-700">OpenAI GPT-5 Nano</span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Deployment</h4>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-white border border-gray-200 rounded-md text-xs font-medium text-gray-700">Vercel</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+              <p className="text-xs text-gray-400">
+                Built by KnightCrown
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
