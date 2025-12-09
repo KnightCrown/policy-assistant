@@ -29,6 +29,14 @@ import { Inter } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// Example prompts that rotate randomly
+const EXAMPLE_PROMPTS = [
+  "What are low-cost ways to improve digital ID uptake among rural women in low-income countries?",
+  "If a government wants to expand cash transfer programs quickly, what early implementation steps should they prioritize?",
+  "What are the main risks to consider when launching an e-government service without strong local digital capacity?",
+  "How can a country in a fragile, conflict-affected setting strengthen its public financial management systems?",
+];
+
 export default function Home() {
   // State
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -42,9 +50,16 @@ export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showTechStack, setShowTechStack] = useState(false);
+  const [currentExamplePrompt, setCurrentExamplePrompt] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Set random example prompt on mount and when new chat is created
+  useEffect(() => {
+    const randomPrompt = EXAMPLE_PROMPTS[Math.floor(Math.random() * EXAMPLE_PROMPTS.length)];
+    setCurrentExamplePrompt(randomPrompt);
+  }, [currentConversationId]);
 
   // Load conversations from local storage on mount
   useEffect(() => {
@@ -406,7 +421,7 @@ export default function Home() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">Policy Assistant</p>
-              <p className="text-xs text-gray-400">v1.3.0</p>
+              <p className="text-xs text-gray-400">v1.3.2</p>
             </div>
           </div>
         </div>
@@ -415,7 +430,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col relative w-full">
         {/* Mobile Header */}
-        <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200">
+        <div className="md:hidden sticky top-0 z-30 flex items-center justify-between p-4 bg-white border-b border-gray-200">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 relative">
               <Image
@@ -454,8 +469,7 @@ export default function Home() {
                   How can I help with your policy analysis?
                 </h2>
                 <p className="text-gray-500 max-w-lg">
-                  Example: What are low-cost ways to improve digital ID uptake
-                  among rural women in low-income countries?
+                  Example: {currentExamplePrompt}
                 </p>
               </div>
             ) : (
@@ -619,7 +633,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Tech Stack</h3>
-                <p className="text-sm text-gray-500">Policy Assistant v1.3.0</p>
+                <p className="text-sm text-gray-500">Policy Assistant v1.3.2</p>
               </div>
             </div>
 
