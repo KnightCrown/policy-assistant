@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ChatRequest, ChatResponse, ErrorResponse } from "@/types/chat";
 import { computeMetrics } from "@/lib/metrics";
+import { validateAndFilterLinks } from "@/lib/linkValidator";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5-nano";
@@ -91,6 +92,9 @@ export async function POST(request: NextRequest) {
     const openAIData = await openAIResponse.json();
     const assistantContent =
       openAIData.choices?.[0]?.message?.content || "No response generated.";
+
+    // Validate and filter broken links (disabled for performance)
+    // const filteredContent = await validateAndFilterLinks(assistantContent);
 
     // Compute metrics
     const metrics = computeMetrics(assistantContent);

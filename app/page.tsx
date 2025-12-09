@@ -406,7 +406,7 @@ export default function Home() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">Policy Assistant</p>
-              <p className="text-xs text-gray-400">v1.2.5</p>
+              <p className="text-xs text-gray-400">v1.3.0</p>
             </div>
           </div>
         </div>
@@ -619,7 +619,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Tech Stack</h3>
-                <p className="text-sm text-gray-500">Policy Assistant v1.2.5</p>
+                <p className="text-sm text-gray-500">Policy Assistant v1.3.0</p>
               </div>
             </div>
 
