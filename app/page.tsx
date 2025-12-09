@@ -21,6 +21,7 @@ import {
   ChevronDown,
   ChevronUp,
   HelpCircle,
+  Info,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
@@ -325,13 +326,21 @@ export default function Home() {
             </span>
           </div>
 
-          <button
-            onClick={createNewChat}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-medium transition-all shadow-sm hover:shadow-md"
-          >
-            <Plus size={20} />
-            New chat
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={createNewChat}
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-medium transition-all shadow-sm hover:shadow-md"
+            >
+              <Plus size={20} />
+              New chat
+            </button>
+            <button
+              onClick={() => setShowTechStack(true)}
+              className="flex-none w-[52px] flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-all shadow-sm hover:shadow-md"
+            >
+              <Info size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -387,12 +396,17 @@ export default function Home() {
             onClick={() => setShowTechStack(true)}
             className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer text-gray-600 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-[#155dfc] flex items-center justify-center">
-              <HelpCircle size={16} className="text-white" />
+            <div className="w-8 h-8 rounded-full bg-[#155dfc] flex items-center justify-center relative overflow-hidden">
+              <Image
+                src="/ppmLogo-white.png"
+                alt="Policy Assistant Logo"
+                fill
+                className="object-contain p-1.5"
+              />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">Policy Assistant</p>
-              <p className="text-xs text-gray-400">v1.2.4</p>
+              <p className="text-xs text-gray-400">v1.2.5</p>
             </div>
           </div>
         </div>
@@ -595,13 +609,27 @@ export default function Home() {
             </button>
             
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                <HelpCircle size={20} />
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 relative overflow-hidden">
+                <Image
+                  src="/ppmLogo2.png"
+                  alt="Policy Assistant Logo"
+                  fill
+                  className="object-contain p-2"
+                />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Tech Stack</h3>
-                <p className="text-sm text-gray-500">Policy Assistant v1.2.4</p>
+                <p className="text-sm text-gray-500">Policy Assistant v1.2.5</p>
               </div>
+            </div>
+
+            <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <p className="text-sm text-gray-700 leading-relaxed">
+                Policy Assistant is a lightweight conversational tool that turns policy questions into clear, structured AI responses.
+              </p>
+              <p className="text-sm text-gray-700 leading-relaxed mt-2">
+                It is supported by simple evidence and complexity scores. And provides links to sources where possible (if provided by chat gpt)
+              </p>
             </div>
 
             <div className="space-y-4">
