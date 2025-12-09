@@ -5,7 +5,9 @@ import { computeMetrics } from "@/lib/metrics";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-const SYSTEM_PROMPT = `You are a helpful policy analysis assistant for development projects. Provide concise, structured answers suitable for World Bank style policy notes. Always respond in clear English, in 2 to 4 short paragraphs, optionally with bullet points.`;
+const SYSTEM_PROMPT = `You are a helpful policy analysis assistant for development projects. Provide concise, structured answers suitable for World Bank style policy notes. Always respond in clear English, in 2 to 4 short paragraphs, optionally with bullet points.
+
+IMPORTANT: At the end of your response, include a section titled "## Sources" and list the full URLs of the sources you used or referred to. Ensure the URLs are valid and accessible. If you don't have specific URLs, list the names of the reports or organizations.`;
 
 export async function POST(request: NextRequest) {
   try {

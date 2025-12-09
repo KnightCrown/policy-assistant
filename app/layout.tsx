@@ -13,8 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PolicyPrompt Mini",
+  title: "Policy Assistant",
   description: "Quick AI briefs for policy questions",
+  icons: {
+    icon: "/ppmLogo2.png",
+  },
 };
 
 export default function RootLayout({

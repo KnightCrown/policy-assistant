@@ -1,25 +1,174 @@
 "use client";
 
 import { useState, useRef, useEffect, FormEvent, KeyboardEvent } from "react";
-import { Message, Metrics, ChatResponse, ErrorResponse } from "@/types/chat";
+import {
+  Message,
+  Metrics,
+  ChatResponse,
+  ErrorResponse,
+  Conversation,
+} from "@/types/chat";
+import {
+  Send,
+  Plus,
+  MessageSquare,
+  Trash2,
+  Search,
+  RefreshCw,
+  BrainCircuit,
+  Menu,
+  X,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import Image from "next/image";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  // State
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<
+    string | null
+  >(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Auto-scroll to bottom when new messages arrive
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load conversations from local storage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("policy-prompt-conversations");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setConversations(parsed);
+        if (parsed.length > 0) {
+          // Load the most recent conversation
+          const mostRecent = parsed.sort(
+            (a: Conversation, b: Conversation) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          )[0];
+          loadConversation(mostRecent);
+        } else {
+          createNewChat();
+        }
+      } catch (e) {
+        console.error("Failed to parse conversations", e);
+        createNewChat();
+      }
+    } else {
+      createNewChat();
+    }
+  }, []);
+
+  // Save conversations to local storage whenever they change
+  useEffect(() => {
+    if (conversations.length > 0) {
+      localStorage.setItem(
+        "policy-prompt-conversations",
+        JSON.stringify(conversations)
+      );
+    }
+  }, [conversations]);
+
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, metrics]);
 
-  const handleSend = async (e: FormEvent) => {
-    e.preventDefault();
-    
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [inputValue]);
+
+  const createNewChat = () => {
+    const newConv: Conversation = {
+      id: Date.now().toString(),
+      title: "New Conversation",
+      messages: [],
+      metrics: null,
+      updatedAt: new Date().toISOString(),
+    };
+    setConversations((prev) => [newConv, ...prev]);
+    loadConversation(newConv);
+  };
+
+  const loadConversation = (conv: Conversation) => {
+    setCurrentConversationId(conv.id);
+    setMessages(conv.messages);
+    setMetrics(conv.metrics);
+    setError(null);
+    // Close sidebar on mobile when a conversation is selected
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const deleteConversation = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const newConvs = conversations.filter((c) => c.id !== id);
+    setConversations(newConvs);
+    localStorage.setItem(
+      "policy-prompt-conversations",
+      JSON.stringify(newConvs)
+    );
+
+    if (currentConversationId === id) {
+      if (newConvs.length > 0) {
+        loadConversation(newConvs[0]);
+      } else {
+        createNewChat();
+      }
+    }
+  };
+
+  const updateCurrentConversation = (
+    newMessages: Message[],
+    newMetrics: Metrics | null
+  ) => {
+    if (!currentConversationId) return;
+
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id === currentConversationId) {
+          // Generate a title from the first user message if it's "New Conversation"
+          let title = c.title;
+          if (
+            c.title === "New Conversation" &&
+            newMessages.length > 0 &&
+            newMessages[0].role === "user"
+          ) {
+            title = newMessages[0].content.slice(0, 30) + "...";
+          }
+          return {
+            ...c,
+            messages: newMessages,
+            metrics: newMetrics,
+            title,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        return c;
+      })
+    );
+  };
+
+  const handleSend = async (e?: FormEvent) => {
+    if (e) e.preventDefault();
+
     const trimmedInput = inputValue.trim();
     if (!trimmedInput || isLoading) return;
 
@@ -30,20 +179,21 @@ export default function Home() {
       createdAt: new Date().toISOString(),
     };
 
-    // Add user message and clear input
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInputValue("");
     setError(null);
     setIsLoading(true);
 
+    // Update conversation state immediately with user message
+    updateCurrentConversation(updatedMessages, metrics);
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map((msg) => ({
+          messages: updatedMessages.map((msg) => ({
             role: msg.role,
             content: msg.content,
           })),
@@ -64,8 +214,70 @@ export default function Home() {
         createdAt: new Date().toISOString(),
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      const finalMessages = [...updatedMessages, assistantMessage];
+      setMessages(finalMessages);
       setMetrics(data.metrics);
+      updateCurrentConversation(finalMessages, data.metrics);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegenerate = async () => {
+    if (isLoading || messages.length === 0) return;
+
+    let messagesToSend = [...messages];
+    
+    // If the last message is from the assistant, remove it to regenerate
+    if (messagesToSend[messagesToSend.length - 1].role === "assistant") {
+      messagesToSend = messagesToSend.slice(0, -1);
+    }
+    
+    // If there are no messages left, return
+    if (messagesToSend.length === 0) return;
+
+    // The last message should now be a user message
+    const lastUserMessage = messagesToSend[messagesToSend.length - 1];
+    if (lastUserMessage.role !== "user") return;
+
+    setMessages(messagesToSend);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: messagesToSend.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData: ErrorResponse = await response.json();
+        throw new Error(errorData.error || "Failed to get response");
+      }
+
+      const data: ChatResponse = await response.json();
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: data.assistantMessage.content,
+        createdAt: new Date().toISOString(),
+      };
+
+      const finalMessages = [...messagesToSend, assistantMessage];
+      setMessages(finalMessages);
+      setMetrics(data.metrics);
+      updateCurrentConversation(finalMessages, data.metrics);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unexpected error occurred";
@@ -78,175 +290,287 @@ export default function Home() {
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend(e as unknown as FormEvent);
+      handleSend();
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-4 sm:px-6">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            PolicyPrompt Mini
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Quick AI briefs for policy questions
-          </p>
-        </div>
-      </header>
+    <div className="flex h-screen bg-[#F3F4F6] font-sans text-gray-900 overflow-hidden">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col max-w-4xl w-full mx-auto">
-        {/* Chat Area */}
-        <div
-          ref={chatContainerRef}
-          className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 space-y-4"
-        >
-          {messages.length === 0 && (
-            <div className="text-center text-gray-500 mt-12">
-              <p className="text-lg">Ask a policy question to get started</p>
-              <p className="text-sm mt-2">
-                Example: &quot;What are effective interventions to reduce
-                maternal mortality?&quot;
-              </p>
+      {/* Sidebar */}
+      <aside
+        className={`${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col`}
+      >
+        <div className="p-4 border-b border-gray-100">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-8 h-8 relative">
+              <Image
+                src="/ppmLogo2.png"
+                alt="Policy Assistant Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <span className={`font-bold text-xl tracking-tight text-gray-800 ${inter.className}`}>
+              Policy Assistant
+            </span>
+          </div>
+
+          <button
+            onClick={createNewChat}
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-medium transition-all shadow-sm hover:shadow-md"
+          >
+            <Plus size={20} />
+            New chat
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-3 space-y-1">
+          <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Your conversations
+          </div>
+          {conversations.length === 0 && (
+            <div className="text-center text-gray-400 text-sm py-4">
+              No conversations yet
             </div>
           )}
-
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
+          {conversations
+            .sort(
+              (a, b) =>
+                new Date(b.updatedAt).getTime() -
+                new Date(a.updatedAt).getTime()
+            )
+            .map((conv) => (
               <div
-                className={`max-w-[85%] rounded-lg px-4 py-3 ${
-                  message.role === "user"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-900 border border-gray-200"
+                key={conv.id}
+                onClick={() => loadConversation(conv)}
+                className={`group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
+                  currentConversationId === conv.id
+                    ? "bg-blue-50 text-blue-700"
+                    : "hover:bg-gray-50 text-gray-700"
                 }`}
               >
-                <div className="whitespace-pre-wrap break-words">
-                  {message.content}
+                <MessageSquare
+                  size={18}
+                  className={
+                    currentConversationId === conv.id
+                      ? "text-blue-600"
+                      : "text-gray-400"
+                  }
+                />
+                <span className="flex-1 truncate text-sm font-medium">
+                  {conv.title}
+                </span>
+                <button
+                  onClick={(e) => deleteConversation(e, conv.id)}
+                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 hover:text-red-600 rounded-md transition-all"
+                  title="Delete conversation"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+        </div>
+
+        {/* Sidebar Footer (Settings placeholder) */}
+        <div className="p-4 border-t border-gray-100">
+          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer text-gray-600 transition-colors">
+            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+              <HelpCircle size={16} className="text-gray-500" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">Policy Assistant</p>
+              <p className="text-xs text-gray-400">v1.2.0</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col relative w-full">
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 relative">
+              <Image
+                src="/ppmLogo2.png"
+                alt="Policy Assistant Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <span className={`font-bold text-lg text-gray-800 ${inter.className}`}>
+              Policy Assistant
+            </span>
+          </div>
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+          >
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Chat Scroll Area */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+          <div className="max-w-3xl mx-auto space-y-8 pb-32">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+                <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center text-blue-600 mb-4">
+                  <BrainCircuit size={40} />
                 </div>
+                <h2 className="text-3xl font-bold text-gray-800">
+                  How can I help with your policy analysis?
+                </h2>
+                <p className="text-gray-500 max-w-md">
+                  Ask about interventions, program designs, or evidence-based
+                  strategies. I'll analyze the evidence strength and
+                  implementation complexity for you.
+                </p>
+              </div>
+            ) : (
+              messages.map((message) => (
                 <div
-                  className={`text-xs mt-2 ${
-                    message.role === "user"
-                      ? "text-blue-100"
-                      : "text-gray-500"
+                  key={message.id}
+                  className={`flex gap-4 ${
+                    message.role === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  {new Date(message.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {isLoading && (
-            <div
-              className="flex justify-start"
-              role="status"
-              aria-live="polite"
-              aria-label="Assistant is thinking"
-            >
-              <div className="bg-white border border-gray-200 rounded-lg px-4 py-3">
-                <div className="flex items-center space-x-2">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                  {message.role === "assistant" && (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center text-white shadow-sm mt-1 relative overflow-hidden">
+                      <Image
+                        src="/ppmLogo-white.png"
+                        alt="Bot"
+                        fill
+                        className="object-contain p-1.5"
+                      />
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-6 py-4 shadow-sm ${
+                      message.role === "user"
+                        ? "bg-blue-600 text-white rounded-br-none"
+                        : "bg-white text-gray-800 rounded-tl-none border border-gray-100"
+                    }`}
+                  >
+                    {message.role === "assistant" ? (
+                      <div className="prose prose-sm md:prose-base max-w-none prose-headings:font-semibold prose-h3:text-lg prose-p:leading-relaxed prose-li:marker:text-blue-500">
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <div className="whitespace-pre-wrap leading-relaxed">
+                        {message.content}
+                      </div>
+                    )}
                   </div>
-                  <span className="text-sm text-gray-600">
-                    Assistant is thinking...
+                </div>
+              ))
+            )}
+
+            {isLoading && (
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center text-white shadow-sm mt-1 relative overflow-hidden">
+                  <Image
+                    src="/ppmLogo-white.png"
+                    alt="Bot"
+                    fill
+                    className="object-contain p-1.5"
+                  />
+                </div>
+                <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-none px-6 py-4 shadow-sm flex items-center gap-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                  </div>
+                  <span className="text-sm text-gray-500 font-medium">
+                    Analyzing policy data...
                   </span>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-800">
-              <p className="text-sm font-medium">Error</p>
-              <p className="text-sm mt-1">{error}</p>
-            </div>
-          )}
+            {error && (
+              <div className="mx-auto max-w-md bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm text-center">
+                {error}
+              </div>
+            )}
 
-          <div ref={messagesEndRef} />
+            {/* Metrics Panel (Always at bottom of chat) */}
+            {metrics && !isLoading && (
+              <div className="mt-8 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="bg-gray-50 px-6 py-3 border-b border-gray-100 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">
+                    Analysis Metrics
+                  </h3>
+                </div>
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <MetricItem
+                    title="Evidence Strength"
+                    metric={metrics.evidenceStrength}
+                    color="blue"
+                  />
+                  <MetricItem
+                    title="Implementation Complexity"
+                    metric={metrics.implementationComplexity}
+                    color="purple"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
-        {/* Metrics Panel */}
-        {metrics ? (
-          <div className="bg-white border-t border-gray-200 px-4 py-6 sm:px-6">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Analysis Metrics
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Evidence Strength */}
-                <MetricCard
-                  title="Evidence Strength"
-                  metric={metrics.evidenceStrength}
-                  color="blue"
-                />
-                {/* Implementation Complexity */}
-                <MetricCard
-                  title="Implementation Complexity"
-                  metric={metrics.implementationComplexity}
-                  color="purple"
-                />
+        {/* Input Area */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-[#F3F4F6] via-[#F3F4F6] to-transparent">
+          <div className="max-w-3xl mx-auto">
+            {messages.length > 0 && !isLoading && (
+              <div className="flex justify-center mb-4">
+                <button
+                  onClick={handleRegenerate}
+                  className="flex items-center gap-2 text-sm text-blue-600 bg-white px-4 py-2 rounded-full shadow-sm border border-blue-100 hover:bg-blue-50 transition-colors"
+                >
+                  <RefreshCw size={14} />
+                  Regenerate response
+                </button>
               </div>
-            </div>
-          </div>
-        ) : messages.length > 0 ? (
-          <div className="bg-white border-t border-gray-200 px-4 py-6 sm:px-6">
-            <div className="max-w-4xl mx-auto text-center text-gray-500">
-              <p className="text-sm">
-                Metrics will appear here after the assistant responds
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white border-t border-gray-200 px-4 py-6 sm:px-6">
-            <div className="max-w-4xl mx-auto text-center text-gray-500">
-              <p className="text-sm">
-                Ask a question to see evidence and complexity scores here.
-              </p>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* Input Form */}
-        <div className="bg-white border-t border-gray-200 px-4 py-4 sm:px-6">
-          <div className="max-w-4xl mx-auto">
-            <form onSubmit={handleSend} className="flex gap-2">
-              <label htmlFor="message-input" className="sr-only">
-                Your policy question
-              </label>
+            <div className="relative bg-white rounded-2xl shadow-lg border border-gray-200 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all">
               <textarea
-                id="message-input"
+                ref={textareaRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isLoading}
-                placeholder="Ask a policy question..."
-                rows={2}
-                className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                placeholder="What's on your mind?"
+                rows={1}
+                className="w-full bg-transparent px-6 py-4 pr-16 text-gray-800 placeholder-gray-400 focus:outline-none resize-none max-h-48 overflow-y-auto"
+                style={{ minHeight: "60px" }}
               />
               <button
-                type="submit"
+                onClick={() => handleSend()}
                 disabled={isLoading || !inputValue.trim()}
-                aria-label="Send message"
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="absolute right-3 bottom-3 p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 transition-all shadow-md hover:shadow-lg disabled:shadow-none"
               >
-                Send
+                <Send size={20} />
               </button>
-            </form>
-            <p className="text-xs text-gray-500 mt-2">
-              Press Enter to send, Shift+Enter for new line
+            </div>
+            <p className="text-center text-xs text-gray-400 mt-3">
+              Policy Assistant can make mistakes. Consider checking important
+              information.
             </p>
           </div>
         </div>
@@ -255,62 +579,94 @@ export default function Home() {
   );
 }
 
-interface MetricCardProps {
+function MetricItem({
+  title,
+  metric,
+  color,
+}: {
   title: string;
-  metric: {
-    score: number;
-    label: string;
-    rationale: string;
-  };
+  metric: Metrics["evidenceStrength"];
   color: "blue" | "purple";
-}
+}) {
+  const [showSources, setShowSources] = useState(false);
 
-function MetricCard({ title, metric, color }: MetricCardProps) {
   const colorClasses = {
     blue: {
       bg: "bg-blue-100",
-      bar: "bg-blue-600",
-      badge: "bg-blue-100 text-blue-800",
+      bar: "bg-blue-500",
+      text: "text-blue-700",
     },
     purple: {
       bg: "bg-purple-100",
-      bar: "bg-purple-600",
-      badge: "bg-purple-100 text-purple-800",
+      bar: "bg-purple-500",
+      text: "text-purple-700",
     },
   };
-
   const colors = colorClasses[color];
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+    <div className="space-y-3">
+      <div className="flex justify-between items-center">
+        <span className="font-medium text-gray-700">{title}</span>
         <span
-          className={`px-2 py-1 rounded text-xs font-medium ${colors.badge}`}
+          className={`text-xs font-bold px-2 py-1 rounded-md ${colors.bg} ${colors.text}`}
         >
           {metric.label}
         </span>
       </div>
-      
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-2xl font-bold text-gray-900">
-            {metric.score}
-          </span>
-          <span className="text-sm text-gray-500">/ 100</span>
-        </div>
-        
-        <div className={`w-full ${colors.bg} rounded-full h-2.5`}>
-          <div
-            className={`${colors.bar} h-2.5 rounded-full transition-all duration-500`}
-            style={{ width: `${metric.score}%` }}
-          ></div>
-        </div>
+      <div className="flex items-end gap-2">
+        <span className="text-3xl font-bold text-gray-900">{metric.score}</span>
+        <span className="text-sm text-gray-400 mb-1">/100</span>
       </div>
-      
-      <p className="text-xs text-gray-600 leading-relaxed">
+      <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full ${colors.bar} rounded-full transition-all duration-1000 ease-out`}
+          style={{ width: `${metric.score}%` }}
+        />
+      </div>
+      <p className="text-sm text-gray-500 leading-relaxed border-l-2 border-gray-200 pl-3 mt-2">
         {metric.rationale}
       </p>
+
+      {metric.sources && metric.sources.length > 0 && (
+        <div className="mt-3">
+          <button
+            onClick={() => setShowSources(!showSources)}
+            className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            {showSources ? (
+              <>
+                Hide Evidence <ChevronUp className="w-3 h-3" />
+              </>
+            ) : (
+              <>
+                View Evidence <ChevronDown className="w-3 h-3" />
+              </>
+            )}
+          </button>
+          
+          {showSources && (
+            <div className="mt-2 p-3 bg-gray-50 rounded-md border border-gray-100 text-xs space-y-1">
+              <p className="font-semibold text-gray-700 mb-2">Sources:</p>
+              <ul className="space-y-1">
+                {metric.sources.map((source, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <ExternalLink className="w-3 h-3 mt-0.5 flex-shrink-0 text-gray-400" />
+                    <a 
+                      href={source} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {source}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

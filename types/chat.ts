@@ -9,6 +9,7 @@ export interface MetricDetail {
   score: number; // 0 to 100
   label: "Low" | "Moderate" | "High" | "Medium";
   rationale: string;
+  sources?: string[];
 }
 
 export interface Metrics {
@@ -33,4 +34,12 @@ export interface ChatResponse {
 
 export interface ErrorResponse {
   error: string;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  messages: Message[];
+  metrics: Metrics | null;
+  updatedAt: string;
 }

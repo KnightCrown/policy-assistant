@@ -18,6 +18,23 @@ function computeEvidenceStrength(answer: string): MetricDetail {
   const lowerAnswer = answer.toLowerCase();
   let score = 30; // Base score
 
+  // Extract sources if present (looking for "## Sources" section or similar)
+  const sources: string[] = [];
+  // Matches ## Sources, ### Sources, **Sources**, or just Sources: at the end
+  const sourceSectionRegex = /(?:##|###|\*\*|Sources:)\s*Sources?([\s\S]*)$/i;
+  const match = answer.match(sourceSectionRegex);
+
+  if (match && match[1]) {
+    const sourceText = match[1];
+    // Extract URLs
+    const urlRegex = /(https?:\/\/[^\s)]+)/g;
+    const urls = sourceText.match(urlRegex);
+    if (urls) {
+      sources.push(...urls);
+      score += 15; // Bonus for having explicit sources
+    }
+  }
+
   // Word count bonus
   const wordCount = answer.split(/\s+/).length;
   if (wordCount > 150) {
@@ -91,7 +108,7 @@ function computeEvidenceStrength(answer: string): MetricDetail {
       "Provides general guidance without citing specific evidence or data sources.";
   }
 
-  return { score, label, rationale };
+  return { score, label, rationale, sources: sources.length > 0 ? sources : undefined };
 }
 
 function computeImplementationComplexity(answer: string): MetricDetail {
