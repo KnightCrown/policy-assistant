@@ -13,7 +13,7 @@ Policy Assistant helps policy analysts, task team leaders, and program managers 
   - **Evidence Strength** (0-100): How well-supported the response is by research and data. Includes a "View Evidence" feature to see source links.
   - **Implementation Complexity** (0-100): How difficult the proposed intervention would be to implement.
 
-## Features (v1.3.2)
+## Features (v1.3.3)
 
 - **AI Policy Assistant**: Powered by OpenAI (GPT-5 nano) with a specialized system prompt for policy analysis.
 - **Smart Metrics**: Automatic computation of "Evidence Strength" and "Implementation Complexity" based on response heuristics.

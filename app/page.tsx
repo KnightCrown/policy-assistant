@@ -421,7 +421,7 @@ export default function Home() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">Policy Assistant</p>
-              <p className="text-xs text-gray-400">v1.3.2</p>
+              <p className="text-xs text-gray-400">v1.3.3</p>
             </div>
           </div>
         </div>
@@ -430,7 +430,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col relative w-full">
         {/* Mobile Header */}
-        <div className="md:hidden sticky top-0 z-30 flex items-center justify-between p-4 bg-white border-b border-gray-200">
+        <div className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-4 bg-white border-b border-gray-200">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 relative">
               <Image
@@ -453,7 +453,7 @@ export default function Home() {
         </div>
 
         {/* Chat Scroll Area */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth pt-20 md:pt-8">
           <div className="max-w-3xl mx-auto space-y-8 pb-32">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
@@ -633,7 +633,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Tech Stack</h3>
-                <p className="text-sm text-gray-500">Policy Assistant v1.3.2</p>
+                <p className="text-sm text-gray-500">Policy Assistant v1.3.3</p>
               </div>
             </div>
 
