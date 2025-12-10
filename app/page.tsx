@@ -55,6 +55,15 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Show tech stack modal on first page load
+  useEffect(() => {
+    const hasSeenModal = sessionStorage.getItem("hasSeenTechStackModal");
+    if (!hasSeenModal) {
+      setShowTechStack(true);
+      sessionStorage.setItem("hasSeenTechStackModal", "true");
+    }
+  }, []);
+
   // Set random example prompt on mount and when new chat is created
   useEffect(() => {
     const randomPrompt = EXAMPLE_PROMPTS[Math.floor(Math.random() * EXAMPLE_PROMPTS.length)];
@@ -633,7 +642,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Tech Stack</h3>
-                <p className="text-sm text-gray-500">Policy Assistant v1.3.3</p>
+                <p className="text-sm text-gray-500">Policy Assistant v1.3.4</p>
               </div>
             </div>
 
