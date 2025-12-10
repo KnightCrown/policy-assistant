@@ -29,7 +29,7 @@ export interface ChatResponse {
     role: "assistant";
     content: string;
   };
-  metrics: Metrics;
+  metrics: Metrics | null;
 }
 
 export interface ErrorResponse {

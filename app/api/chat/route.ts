@@ -96,8 +96,12 @@ export async function POST(request: NextRequest) {
     // Validate and filter broken links (disabled for performance)
     // const filteredContent = await validateAndFilterLinks(assistantContent);
 
-    // Compute metrics
-    const metrics = computeMetrics(assistantContent);
+    // Get the user's last message to check if it's a substantive question
+    const lastUserMessage = messages[messages.length - 1];
+    const isSubstantiveQuestion = checkIfSubstantiveQuestion(lastUserMessage.content);
+
+    // Compute metrics only for substantive questions
+    const metrics = isSubstantiveQuestion ? computeMetrics(assistantContent) : null;
 
     // Build response
     const response: ChatResponse = {
@@ -116,4 +120,48 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Determines if a user message is a substantive question that warrants analysis metrics.
+ * Returns false for greetings, simple acknowledgments, or very short messages.
+ */
+function checkIfSubstantiveQuestion(message: string): boolean {
+  const trimmed = message.trim().toLowerCase();
+  
+  // Too short to be substantive (less than 10 characters)
+  if (trimmed.length < 10) {
+    return false;
+  }
+  
+  // Common greetings and simple responses
+  const simplePatterns = [
+    /^(hi|hello|hey|thanks|thank you|ok|okay|yes|no|bye|goodbye)$/i,
+    /^(hi there|hello there|good morning|good afternoon|good evening)$/i,
+    /^thanks?( you)?( very much)?( a lot)?!*$/i,
+    /^(ok|okay|sure|alright|got it|i see|nice|cool|great)!*$/i,
+  ];
+  
+  for (const pattern of simplePatterns) {
+    if (pattern.test(trimmed)) {
+      return false;
+    }
+  }
+  
+  // Check for question words or policy-relevant keywords
+  const substantiveIndicators = [
+    'what', 'how', 'why', 'when', 'where', 'who', 'which',
+    'can you', 'could you', 'would you',
+    'policy', 'government', 'program', 'project', 'implement',
+    'development', 'economic', 'social', 'reform', 'strategy',
+    'challenge', 'risk', 'benefit', 'impact', 'effect',
+    'suggest', 'recommend', 'advice', 'explain', 'analyze',
+  ];
+  
+  const hasSubstantiveContent = substantiveIndicators.some(indicator => 
+    trimmed.includes(indicator)
+  );
+  
+  // Consider it substantive if it has indicators OR is reasonably long (30+ chars)
+  return hasSubstantiveContent || trimmed.length >= 30;
 }

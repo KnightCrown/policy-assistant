@@ -642,7 +642,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Tech Stack</h3>
-                <p className="text-sm text-gray-500">Policy Assistant v1.3.4</p>
+                <p className="text-sm text-gray-500">Policy Assistant v1.4.0</p>
               </div>
             </div>
 
@@ -651,7 +651,7 @@ export default function Home() {
                 Policy Assistant is a lightweight conversational tool that turns policy questions into clear, structured AI responses.
               </p>
               <p className="text-sm text-gray-700 leading-relaxed mt-2">
-                It is supported by simple evidence and complexity scores. And provides links to sources where possible (if provided by chat gpt)
+                It is supported by source-based evidence. And provides links to sources where possible (if provided by chat gpt)
               </p>
             </div>
 
